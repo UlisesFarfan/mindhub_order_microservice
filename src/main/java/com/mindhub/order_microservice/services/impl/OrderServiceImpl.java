@@ -8,23 +8,34 @@ import com.mindhub.order_microservice.models.OrderModel;
 import com.mindhub.order_microservice.repositories.OrderRepository;
 import com.mindhub.order_microservice.services.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.Mapping;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class OrderServiceImpl implements OrderService {
     @Autowired
     private OrderRepository orderRepository;
 
+    @Autowired
+    private RestTemplate restTemplate;
+
     @Override
     public GetOrderDTO create(PostOrderDTO order) throws GenericException {
         try {
+            String url = "http://localhost:8081/api/users/" + order.userId();
+            restTemplate.exchange(url, HttpMethod.GET, null, Map.class);
             OrderModel orderModel = new OrderModel(order.userId());
             OrderModel savedOrder = orderRepository.save(orderModel);
             return new GetOrderDTO(savedOrder);
         } catch (Exception e) {
-            throw new GenericException("something went wrong");
+            throw new GenericException(e.getMessage());
         }
     }
 
@@ -33,7 +44,7 @@ public class OrderServiceImpl implements OrderService {
         try {
             return orderRepository.save(order);
         } catch (Exception e) {
-            throw new GenericException("something went wrong");
+            throw new GenericException(e.getMessage());
         }
     }
 
@@ -42,7 +53,7 @@ public class OrderServiceImpl implements OrderService {
         try {
             return orderRepository.findAll();
         } catch (Exception e) {
-            throw new GenericException("something went wrong");
+            throw new GenericException(e.getMessage());
         }
     }
 
@@ -56,7 +67,7 @@ public class OrderServiceImpl implements OrderService {
         try {
             return new GetOrderDTO(getById(id));
         } catch (Exception e) {
-            throw new GenericException("something went wrong");
+            throw new GenericException(e.getMessage());
         }
     }
 
@@ -70,7 +81,7 @@ public class OrderServiceImpl implements OrderService {
             orderModel = orderRepository.save(orderModel);
             return new GetOrderDTO(orderModel);
         } catch (Exception e) {
-            throw new GenericException("something went wrong");
+            throw new GenericException(e.getMessage());
         }
     }
 
@@ -79,7 +90,7 @@ public class OrderServiceImpl implements OrderService {
         try {
             orderRepository.deleteById(id);
         } catch (Exception e) {
-            throw new GenericException("something went wrong");
+            throw new GenericException(e.getMessage());
         }
     }
 }
