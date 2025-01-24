@@ -27,17 +27,8 @@ public class OrderItemServiceImpl implements OrderItemService {
     @Override
     public GetOrderItemDTO create(PostOrderItemDTO orderItem) throws GenericException {
         try {
-            String url = "http://localhost:8082/api/products/" + orderItem.productId();
-            ResponseEntity<Map> responseEntity = restTemplate.exchange(url, HttpMethod.GET, null, Map.class);
-            Map responseBody = responseEntity.getBody();
-            assert responseBody != null;
-            Integer stock = (Integer) responseBody.get("stock");
-            if(stock < orderItem.quantity()) {
-                throw new GenericException("insufficient stock");
-            } else {
-                String purl = "http://localhost:8082/api/products/stock/" + orderItem.productId() + "?quantity=" + orderItem.quantity();
-                restTemplate.exchange(purl, HttpMethod.PUT, null, Map.class);
-            }
+            String purl = "http://localhost:8082/api/products/stock/" + orderItem.productId() + "?quantity=" + orderItem.quantity();
+            restTemplate.exchange(purl, HttpMethod.PUT, null, Map.class);
             OrderItemModel productModel = new OrderItemModel(orderItem.productId(), orderItem.quantity(), orderItem.orderModel());
             OrderItemModel savedProduct = orderItemRepository.save(productModel);
             return new GetOrderItemDTO(savedProduct);
