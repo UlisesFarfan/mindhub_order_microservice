@@ -3,7 +3,9 @@ package com.mindhub.order_microservice.controller;
 import com.mindhub.order_microservice.dtos.get.GetOrderItemDTO;
 import com.mindhub.order_microservice.dtos.post.PostOrderItemDTO;
 import com.mindhub.order_microservice.dtos.update.UpdateOrderItemDTO;
+import com.mindhub.order_microservice.services.AppService;
 import com.mindhub.order_microservice.services.OrderItemService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +20,9 @@ public class OrderItemController {
     @Autowired
     private OrderItemService orderItemService;
 
+    @Autowired
+    private AppService appService;
+
     @GetMapping("/")
     public ResponseEntity<List<GetOrderItemDTO>> getAll() {
         List<GetOrderItemDTO> productDTO = orderItemService.getAll()
@@ -28,11 +33,12 @@ public class OrderItemController {
     }
 
     @PostMapping("/")
-    public ResponseEntity<GetOrderItemDTO> create(@RequestBody PostOrderItemDTO orderItem){
+    public ResponseEntity<GetOrderItemDTO> create(HttpServletRequest request,@RequestBody PostOrderItemDTO orderItem){
         if (orderItem.productId() == null || orderItem.quantity() == null) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
-        return new ResponseEntity<>(orderItemService.create(orderItem), HttpStatus.CREATED);
+        String token = appService.extraerToken(request);
+        return new ResponseEntity<>(orderItemService.create(orderItem, token), HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")

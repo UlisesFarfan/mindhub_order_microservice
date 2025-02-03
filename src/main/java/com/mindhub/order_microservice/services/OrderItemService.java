@@ -9,7 +9,7 @@ import com.mindhub.order_microservice.models.OrderItemModel;
 import java.util.List;
 
 public interface OrderItemService {
-    GetOrderItemDTO create(PostOrderItemDTO orderItem) throws GenericException;
+    GetOrderItemDTO create(PostOrderItemDTO orderItem, String token) throws GenericException;
 
     OrderItemModel save(OrderItemModel orderItem) throws GenericException;
 

@@ -8,8 +8,9 @@ import com.mindhub.order_microservice.models.OrderItemModel;
 import com.mindhub.order_microservice.repositories.OrderItemRepository;
 import com.mindhub.order_microservice.services.OrderItemService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -25,14 +26,26 @@ public class OrderItemServiceImpl implements OrderItemService {
     private RestTemplate restTemplate;
 
     @Override
-    public GetOrderItemDTO create(PostOrderItemDTO orderItem) throws GenericException {
+    public GetOrderItemDTO create(PostOrderItemDTO orderItem, String token) throws GenericException {
         try {
-            String purl = "http://localhost:8082/api/products/stock/" + orderItem.productId() + "?quantity=" + orderItem.quantity();
-            restTemplate.exchange(purl, HttpMethod.PUT, null, Map.class);
+            String purl = "http://localhost:8080/api/products/stock/" + orderItem.productId() + "?quantity=" + orderItem.quantity() + "&type=res";
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", "Bearer " + token);
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+            restTemplate.exchange(purl, HttpMethod.PUT, entity, Map.class);
             OrderItemModel productModel = new OrderItemModel(orderItem.productId(), orderItem.quantity(), orderItem.orderModel());
             OrderItemModel savedProduct = orderItemRepository.save(productModel);
             return new GetOrderItemDTO(savedProduct);
         } catch (Exception e) {
+            String purl = "http://localhost:8080/api/producer_rabbit/restore_stock" + "?productId=" + orderItem.productId() + "&quantity=" + orderItem.quantity();
+            try {
+                HttpHeaders headers = new HttpHeaders();
+                headers.set("Authorization", "Bearer " + token);
+                HttpEntity<String> entity = new HttpEntity<>(headers);
+                restTemplate.exchange(purl, HttpMethod.PUT, entity, Map.class);
+            } catch (Exception postException) {
+                System.out.println("Error al intentar restaurar el stock: " + postException.getMessage());
+            }
             throw new GenericException(e.getMessage());
         }
     }
